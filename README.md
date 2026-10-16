@@ -33,9 +33,28 @@ Or skip the build step and run it directly:
 go run ./cmd/kup-helper
 ```
 
-## Authentication
+## Configuration
 
-Export your GitHub personal access token before running the tool:
+Settings are resolved in this order (highest priority first):
+
+1. CLI flags (e.g. `-org`)
+2. Environment variables
+3. `.env` in the current directory
+4. `.env` in the user config directory (`~/Library/Application Support/kup-helper/.env` on macOS, `~/.config/kup-helper/.env` on Linux)
+
+| Variable       | Description                                   |
+| -------------- | --------------------------------------------- |
+| `GITHUB_TOKEN` | GitHub personal access token (required)       |
+| `KUP_ORG`      | Default value for the `-org` flag (optional)  |
+
+Create a `.env` file (see [.env.example](.env.example)) and restrict its permissions:
+
+```sh
+cp .env.example .env
+chmod 600 .env
+```
+
+Or just export the variable; it overrides the file:
 
 ```sh
 export GITHUB_TOKEN=ghp_xxxxxxxx
@@ -49,7 +68,7 @@ go run ./cmd/kup-helper [flags]
 
 | Flag     | Description                                           | Default                                        |
 | -------- | ----------------------------------------------------- | ---------------------------------------------- |
-| `-org`   | Restrict the search to a specific GitHub organization | (none, searches everywhere your token can see) |
+| `-org`   | Restrict the search to a specific GitHub organization | `KUP_ORG`, else none (searches everywhere your token can see) |
 | `-since` | Start date in `YYYY-MM-DD` format                     | 1st of the current month                       |
 | `-day`   | Day of the month the report is submitted (1-31). Searches from that day of the previous month until today; shorter months are clamped to their last day. Cannot be combined with `-since` | (none) |
 
@@ -95,6 +114,7 @@ listed separately under "PRs without Jira ticket ID" so they can be validated ma
 
 ```text
 cmd/kup-helper/     entry point: flag parsing and orchestration
+internal/config/    settings from environment variables and .env files
 internal/github/    minimal GitHub REST API client (auth, PR search with pagination)
 internal/report/    Jira ID extraction, PR aggregation, report printing
 ```

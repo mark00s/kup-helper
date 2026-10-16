@@ -4,8 +4,8 @@
 //   - the names of the repositories those PRs belong to
 //   - links to each PR
 //
-// Requires the GITHUB_TOKEN environment variable to hold a GitHub personal
-// access token (Settings -> Developer settings -> Personal access tokens).
+// Requires GITHUB_TOKEN (environment variable or .env file) to hold a GitHub
+// personal access token (Settings -> Developer settings -> Personal access tokens).
 // The "repo" scope is enough (or "public_repo" if you only care about public repos).
 //
 // Usage:
@@ -26,18 +26,23 @@ import (
 	"os"
 	"time"
 
+	"github.com/mark00s/kup-helper/internal/config"
 	"github.com/mark00s/kup-helper/internal/github"
 	"github.com/mark00s/kup-helper/internal/report"
 )
 
 func main() {
-	token := os.Getenv("GITHUB_TOKEN")
+	cfg := config.Load()
+	for _, w := range cfg.Warnings {
+		fmt.Fprintf(os.Stderr, "Warning: %s\n", w)
+	}
+	token := cfg.Token
 	if token == "" {
-		fmt.Fprintln(os.Stderr, "Error: set the GITHUB_TOKEN environment variable to a GitHub personal access token.")
+		fmt.Fprintln(os.Stderr, "Error: set GITHUB_TOKEN (environment variable or .env file) to a GitHub personal access token.")
 		os.Exit(1)
 	}
 
-	org := flag.String("org", "", "Optional: restrict the search to a specific organization (e.g. -org=my-company)")
+	org := flag.String("org", cfg.Org, "Optional: restrict the search to a specific organization (e.g. -org=my-company); defaults to KUP_ORG")
 	since := flag.String("since", "", "Optional: start date in YYYY-MM-DD format (defaults to the 1st of the current month)")
 	day := flag.Int("day", 0, "Optional: day of the month the report is submitted (1-31); searches from that day of the previous month until today. Cannot be combined with -since")
 	flag.Parse()
