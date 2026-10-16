@@ -17,7 +17,7 @@ import (
 // Config holds the settings that rarely change between runs.
 type Config struct {
 	Token string // GITHUB_TOKEN
-	Org   string // KUP_ORG
+	Orgs  string // KUP_ORGS (comma-separated)
 
 	// Warnings are non-fatal problems worth showing to the user.
 	Warnings []string
@@ -63,7 +63,7 @@ func load(lookup func(string) (string, bool), paths []string) Config {
 	}
 
 	cfg.Token = get("GITHUB_TOKEN")
-	cfg.Org = get("KUP_ORG")
+	cfg.Orgs = get("KUP_ORGS")
 	return cfg
 }
 

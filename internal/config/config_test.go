@@ -11,13 +11,13 @@ func TestParseDotEnv(t *testing.T) {
 	in := `
 # comment
 GITHUB_TOKEN=abc
-export KUP_ORG = "my-company"
+export KUP_ORGS = "my-company"
 QUOTED='single'
 NOVALUE
 =nokey
 `
 	got := ParseDotEnv(strings.NewReader(in))
-	want := map[string]string{"GITHUB_TOKEN": "abc", "KUP_ORG": "my-company", "QUOTED": "single"}
+	want := map[string]string{"GITHUB_TOKEN": "abc", "KUP_ORGS": "my-company", "QUOTED": "single"}
 	if len(got) != len(want) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
@@ -38,8 +38,8 @@ func writeEnv(t *testing.T, content string, mode os.FileMode) string {
 }
 
 func TestLoadPrecedence(t *testing.T) {
-	local := writeEnv(t, "GITHUB_TOKEN=local\nKUP_ORG=local-org\n", 0o600)
-	global := writeEnv(t, "GITHUB_TOKEN=global\nKUP_ORG=global-org\n", 0o600)
+	local := writeEnv(t, "GITHUB_TOKEN=local\nKUP_ORGS=local-org,other-org\n", 0o600)
+	global := writeEnv(t, "GITHUB_TOKEN=global\nKUP_ORGS=global-org\n", 0o600)
 	env := map[string]string{"GITHUB_TOKEN": "fromenv"}
 	lookup := func(k string) (string, bool) { v, ok := env[k]; return v, ok }
 
@@ -47,14 +47,14 @@ func TestLoadPrecedence(t *testing.T) {
 	if cfg.Token != "fromenv" {
 		t.Errorf("token = %q, want env value", cfg.Token)
 	}
-	if cfg.Org != "local-org" {
-		t.Errorf("org = %q, want first file's value", cfg.Org)
+	if cfg.Orgs != "local-org,other-org" {
+		t.Errorf("orgs = %q, want first file's value", cfg.Orgs)
 	}
 }
 
 func TestLoadMissingFiles(t *testing.T) {
 	cfg := load(func(string) (string, bool) { return "", false }, []string{"/nonexistent/.env"})
-	if cfg.Token != "" || cfg.Org != "" || len(cfg.Warnings) != 0 {
+	if cfg.Token != "" || cfg.Orgs != "" || len(cfg.Warnings) != 0 {
 		t.Errorf("unexpected config: %+v", cfg)
 	}
 }

@@ -37,7 +37,7 @@ go run ./cmd/kup-helper
 
 Settings are resolved in this order (highest priority first):
 
-1. CLI flags (e.g. `-org`)
+1. CLI flags (e.g. `-orgs`)
 2. Environment variables
 3. `.env` in the current directory
 4. `.env` in the user config directory (`~/Library/Application Support/kup-helper/.env` on macOS, `~/.config/kup-helper/.env` on Linux)
@@ -45,7 +45,7 @@ Settings are resolved in this order (highest priority first):
 | Variable       | Description                                   |
 | -------------- | --------------------------------------------- |
 | `GITHUB_TOKEN` | GitHub personal access token (required)       |
-| `KUP_ORG`      | Default value for the `-org` flag (optional)  |
+| `KUP_ORGS`     | Default value for the `-orgs` flag, comma-separated (optional) |
 
 Create a `.env` file (see [.env.example](.env.example)) and restrict its permissions:
 
@@ -68,14 +68,14 @@ go run ./cmd/kup-helper [flags]
 
 | Flag     | Description                                           | Default                                        |
 | -------- | ----------------------------------------------------- | ---------------------------------------------- |
-| `-org`   | Restrict the search to one or more GitHub organizations (comma-separated) | `KUP_ORG`, else none (searches everywhere your token can see) |
+| `-orgs`  | Restrict the search to one or more GitHub organizations (comma-separated) | `KUP_ORGS`, else none (searches everywhere your token can see) |
 | `-since` | Start date in `YYYY-MM-DD` format                     | 1st of the current month                       |
 | `-day`   | Day of the month the report is submitted (1-31). Searches from that day of the previous month until today; shorter months are clamped to their last day. Cannot be combined with `-since` | (none) |
 
 Example:
 
 ```sh
-go run ./cmd/kup-helper -org=my-company -since=2026-01-01
+go run ./cmd/kup-helper -orgs=my-company,other-org -since=2026-01-01
 go run ./cmd/kup-helper -day=20   # run on 2026-10-15 -> searches since 2026-09-20
 ```
 

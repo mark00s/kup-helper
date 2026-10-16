@@ -15,7 +15,7 @@
 //
 // Optional flags:
 //
-//	go run ./cmd/kup-helper -org=organization-name
+//	go run ./cmd/kup-helper -orgs=organization-name,other-org
 //	go run ./cmd/kup-helper -since=2026-09-01
 //	go run ./cmd/kup-helper -day=20
 package main
@@ -43,7 +43,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	org := flag.String("org", cfg.Org, "Optional: restrict the search to one or more comma-separated organizations (e.g. -org=my-company,other-org); defaults to KUP_ORG")
+	orgs := flag.String("orgs", cfg.Orgs, "Optional: restrict the search to one or more comma-separated organizations (e.g. -orgs=my-company,other-org); defaults to KUP_ORGS")
 	since := flag.String("since", "", "Optional: start date in YYYY-MM-DD format (defaults to the 1st of the current month)")
 	day := flag.Int("day", 0, "Optional: day of the month the report is submitted (1-31); searches from that day of the previous month until today. Cannot be combined with -since")
 	flag.Parse()
@@ -79,7 +79,7 @@ func main() {
 	fmt.Printf("Searching for PRs created since: %s\n\n", startDate)
 
 	query := fmt.Sprintf("is:pr author:%s created:>=%s", username, startDate)
-	for _, o := range strings.Split(*org, ",") {
+	for _, o := range strings.Split(*orgs, ",") {
 		if o = strings.TrimSpace(o); o != "" {
 			query += " org:" + o
 		}
