@@ -12,9 +12,9 @@ import (
 	"github.com/mark00s/kup-helper/internal/github"
 )
 
-// Matches titles like: "fix(ABC-123): fixed something", "feat(PROJ-45): added X"
-// (case-insensitive, optional space before the colon).
-var jiraTitleRegexp = regexp.MustCompile(`(?i)^(?:fix|feat|chore)\(([^)]+)\)\s*:`)
+// Matches a Jira ticket ID anywhere in a title, e.g. "JP-2137" in
+// "fix(JP-2137): something" or "[JP-2137] something".
+var jiraTitleRegexp = regexp.MustCompile(`\b[A-Z][A-Z_0-9]+-\d+\b`)
 
 // PR is a pull request enriched with its extracted Jira ticket ID and
 // repository name.
@@ -48,14 +48,10 @@ func Build(prs []github.PullRequest) []PR {
 	return result
 }
 
-// ExtractJiraID pulls the Jira ticket ID out of a conventional-commit-style
-// PR title, or returns "" if none is found.
+// ExtractJiraID returns the first Jira ticket ID found in the PR title, or ""
+// if none is found.
 func ExtractJiraID(title string) string {
-	matches := jiraTitleRegexp.FindStringSubmatch(strings.TrimSpace(title))
-	if len(matches) < 2 {
-		return ""
-	}
-	return matches[1]
+	return jiraTitleRegexp.FindString(title)
 }
 
 // repoNameFromURL extracts "owner/repo" from a URL like
@@ -90,6 +86,17 @@ func UniqueJiraIDs(prs []PR) []string {
 	return sortedKeys(set)
 }
 
+// WithoutJiraID returns the PRs whose titles contain no Jira ticket ID.
+func WithoutJiraID(prs []PR) []PR {
+	var out []PR
+	for _, pr := range prs {
+		if pr.JiraID == "" {
+			out = append(out, pr)
+		}
+	}
+	return out
+}
+
 func sortedKeys(set map[string]struct{}) []string {
 	keys := make([]string, 0, len(set))
 	for k := range set {
@@ -116,6 +123,15 @@ func Print(w io.Writer, prs []PR) {
 	}
 	for _, j := range jiras {
 		fmt.Fprintf(w, "- %s\n", j)
+	}
+
+	fmt.Fprintln(w, "\n=== PRs without Jira ticket ID (validate manually) ===")
+	missing := WithoutJiraID(prs)
+	if len(missing) == 0 {
+		fmt.Fprintln(w, "(none)")
+	}
+	for _, pr := range missing {
+		fmt.Fprintf(w, "- %s | %s | %s\n", pr.Repo, pr.URL, pr.Title)
 	}
 
 	fmt.Fprintln(w, "\n=== Pull request details ===")

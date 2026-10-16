@@ -66,7 +66,7 @@ go run ./cmd/kup-helper -day=20   # run on 2026-10-15 -> searches since 2026-09-
 Logged in as: mark00s
 Searching for PRs created since: 2026-09-01
 
-Found 2 pull request(s).
+Found 3 pull request(s).
 
 === Repositories ===
 - my-company/backend-service
@@ -76,10 +76,20 @@ Found 2 pull request(s).
 - PROJ-123
 - PROJ-456
 
+=== PRs without Jira ticket ID (validate manually) ===
+- my-company/frontend-app | https://github.com/my-company/frontend-app/pull/19 | update dependencies
+
 === Pull request details ===
 [PROJ-123] my-company/backend-service | https://github.com/my-company/backend-service/pull/42 | fix(PROJ-123): correct pagination bug
 [PROJ-456] my-company/frontend-app | https://github.com/my-company/frontend-app/pull/17 | feat(PROJ-456): add dark mode toggle
+[(none)] my-company/frontend-app | https://github.com/my-company/frontend-app/pull/19 | update dependencies
 ```
+
+### Jira ticket ID detection
+
+The first Jira ticket ID (uppercase project key that may contain digits and underscores, dash, number, e.g. `JP-2137` or `MY_PROJ-12`) found anywhere in a PR title is used,
+so `fix(JP-2137): ...`, `[JP-2137] ...` and `JP-2137 ...` all work. PRs whose titles contain no ticket ID are
+listed separately under "PRs without Jira ticket ID" so they can be validated manually.
 
 ## Project structure
 
