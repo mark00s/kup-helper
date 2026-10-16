@@ -2,7 +2,7 @@
 
 ## Features
 
-- [ ] Add support for multiple organizations
+- [x] Add support for multiple organizations
 - [x] Add support for .env file
 - [ ] Put together report for KUP
   - [ ] Three categories - Task IDs, repositories, and PR URLs

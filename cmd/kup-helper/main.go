@@ -24,6 +24,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/mark00s/kup-helper/internal/config"
@@ -42,7 +43,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	org := flag.String("org", cfg.Org, "Optional: restrict the search to a specific organization (e.g. -org=my-company); defaults to KUP_ORG")
+	org := flag.String("org", cfg.Org, "Optional: restrict the search to one or more comma-separated organizations (e.g. -org=my-company,other-org); defaults to KUP_ORG")
 	since := flag.String("since", "", "Optional: start date in YYYY-MM-DD format (defaults to the 1st of the current month)")
 	day := flag.Int("day", 0, "Optional: day of the month the report is submitted (1-31); searches from that day of the previous month until today. Cannot be combined with -since")
 	flag.Parse()
@@ -78,8 +79,10 @@ func main() {
 	fmt.Printf("Searching for PRs created since: %s\n\n", startDate)
 
 	query := fmt.Sprintf("is:pr author:%s created:>=%s", username, startDate)
-	if *org != "" {
-		query += fmt.Sprintf(" org:%s", *org)
+	for _, o := range strings.Split(*org, ",") {
+		if o = strings.TrimSpace(o); o != "" {
+			query += " org:" + o
+		}
 	}
 
 	items, err := client.SearchPullRequests(query)

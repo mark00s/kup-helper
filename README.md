@@ -68,7 +68,7 @@ go run ./cmd/kup-helper [flags]
 
 | Flag     | Description                                           | Default                                        |
 | -------- | ----------------------------------------------------- | ---------------------------------------------- |
-| `-org`   | Restrict the search to a specific GitHub organization | `KUP_ORG`, else none (searches everywhere your token can see) |
+| `-org`   | Restrict the search to one or more GitHub organizations (comma-separated) | `KUP_ORG`, else none (searches everywhere your token can see) |
 | `-since` | Start date in `YYYY-MM-DD` format                     | 1st of the current month                       |
 | `-day`   | Day of the month the report is submitted (1-31). Searches from that day of the previous month until today; shorter months are clamped to their last day. Cannot be combined with `-since` | (none) |
 
