@@ -19,6 +19,14 @@ type Config struct {
 	Token string // GITHUB_TOKEN
 	Orgs  string // KUP_ORGS (comma-separated)
 
+	// JiraHostname is the Jira host, e.g. "mycompany.atlassian.net" (JIRA_HOSTNAME).
+	JiraHostname string
+
+	// JiraEmail and JiraAPIToken (JIRA_EMAIL, JIRA_API_TOKEN) enable ticket
+	// title lookups on Jira Cloud.
+	JiraEmail    string
+	JiraAPIToken string
+
 	// Warnings are non-fatal problems worth showing to the user.
 	Warnings []string
 }
@@ -64,6 +72,9 @@ func load(lookup func(string) (string, bool), paths []string) Config {
 
 	cfg.Token = get("GITHUB_TOKEN")
 	cfg.Orgs = get("KUP_ORGS")
+	cfg.JiraHostname = get("JIRA_HOSTNAME")
+	cfg.JiraEmail = get("JIRA_EMAIL")
+	cfg.JiraAPIToken = get("JIRA_API_TOKEN")
 	return cfg
 }
 

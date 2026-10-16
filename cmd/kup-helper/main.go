@@ -18,9 +18,11 @@
 //	go run ./cmd/kup-helper -orgs=organization-name,other-org
 //	go run ./cmd/kup-helper -since=2026-09-01
 //	go run ./cmd/kup-helper -day=20
+//	go run ./cmd/kup-helper -no-jira
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -29,6 +31,7 @@ import (
 
 	"github.com/mark00s/kup-helper/internal/config"
 	"github.com/mark00s/kup-helper/internal/github"
+	"github.com/mark00s/kup-helper/internal/jira"
 	"github.com/mark00s/kup-helper/internal/report"
 )
 
@@ -46,6 +49,7 @@ func main() {
 	orgs := flag.String("orgs", cfg.Orgs, "Optional: restrict the search to one or more comma-separated organizations (e.g. -orgs=my-company,other-org); defaults to KUP_ORGS")
 	since := flag.String("since", "", "Optional: start date in YYYY-MM-DD format (defaults to the 1st of the current month)")
 	day := flag.Int("day", 0, "Optional: day of the month the report is submitted (1-31); searches from that day of the previous month until today. Cannot be combined with -since")
+	noJira := flag.Bool("no-jira", false, "Optional: skip fetching ticket titles from Jira Cloud (needs JIRA_HOSTNAME, JIRA_EMAIL and JIRA_API_TOKEN)")
 	flag.Parse()
 
 	if *day != 0 && (*day < 1 || *day > 31) {
@@ -97,5 +101,17 @@ func main() {
 	}
 
 	prs := report.Build(items)
-	report.Print(os.Stdout, prs)
+	hostname := strings.TrimSpace(cfg.JiraHostname)
+
+	var titles map[string]string
+	if !*noJira && hostname != "" && cfg.JiraEmail != "" && cfg.JiraAPIToken != "" {
+		jc := jira.NewClient(hostname, cfg.JiraEmail, cfg.JiraAPIToken, 15*time.Second)
+		titles, err = jc.Summaries(context.Background(), report.UniqueJiraIDs(prs))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Jira lookup failed, continuing without ticket titles: %v\n", err)
+			titles = nil
+		}
+	}
+
+	report.Print(os.Stdout, prs, hostname, titles)
 }

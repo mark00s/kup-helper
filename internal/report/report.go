@@ -106,23 +106,49 @@ func sortedKeys(set map[string]struct{}) []string {
 	return keys
 }
 
-// Print writes the full kup-helper report (repositories, Jira ticket IDs,
-// and per-PR details) to w.
-func Print(w io.Writer, prs []PR) {
+// Print writes the full kup-helper report (Jira ticket IDs, repositories,
+// valid PR URLs, and per-PR details) to w. When hostname is set (e.g. "mycompany.atlassian.net"),
+// each Jira ticket ID is followed by its https://<hostname>/browse/<ID> link.
+// When titles is non-nil, each ticket line ends with its Jira title, or
+// "(not found)" if the ticket is missing from titles.
+func Print(w io.Writer, prs []PR, hostname string, titles map[string]string) {
 	fmt.Fprintf(w, "Found %d pull request(s).\n\n", len(prs))
 
-	fmt.Fprintln(w, "=== Repositories ===")
-	for _, r := range UniqueRepos(prs) {
-		fmt.Fprintf(w, "- %s\n", r)
-	}
-
-	fmt.Fprintln(w, "\n=== Jira ticket IDs ===")
+	fmt.Fprintln(w, "=== Jira ticket IDs ===")
 	jiras := UniqueJiraIDs(prs)
 	if len(jiras) == 0 {
 		fmt.Fprintln(w, "(no ticket IDs found in the PR titles)")
 	}
 	for _, j := range jiras {
-		fmt.Fprintf(w, "- %s\n", j)
+		line := "- " + j
+		if hostname != "" {
+			line += fmt.Sprintf(" | https://%s/browse/%s", hostname, j)
+		}
+		if titles != nil {
+			title, ok := titles[j]
+			if !ok {
+				title = "(not found)"
+			}
+			line += " | " + title
+		}
+		fmt.Fprintln(w, line)
+	}
+
+	fmt.Fprintln(w, "\n=== Repositories ===")
+	for _, r := range UniqueRepos(prs) {
+		fmt.Fprintf(w, "- %s\n", r)
+	}
+
+	fmt.Fprintln(w, "\n=== Valid PR URLs ===")
+	valid := 0
+	for _, pr := range prs {
+		if pr.JiraID != "" {
+			fmt.Fprintf(w, "- %s\n", pr.URL)
+			valid++
+		}
+	}
+	if valid == 0 {
+		fmt.Fprintln(w, "(none)")
 	}
 
 	fmt.Fprintln(w, "\n=== PRs without Jira ticket ID (validate manually) ===")

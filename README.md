@@ -46,6 +46,9 @@ Settings are resolved in this order (highest priority first):
 | -------------- | --------------------------------------------- |
 | `GITHUB_TOKEN` | GitHub personal access token (required)       |
 | `KUP_ORGS`     | Default value for the `-orgs` flag, comma-separated (optional) |
+| `JIRA_HOSTNAME` | Jira hostname, e.g. `mycompany.atlassian.net`; when set, ticket IDs are printed with `https://<hostname>/browse/<ID>` links (optional) |
+| `JIRA_EMAIL` | Atlassian account email; with `JIRA_API_TOKEN` and `JIRA_HOSTNAME`, ticket titles are fetched from Jira Cloud (optional) |
+| `JIRA_API_TOKEN` | [Atlassian API token](https://id.atlassian.com/manage-profile/security/api-tokens) (optional). Only Jira Cloud is supported |
 
 Create a `.env` file (see [.env.example](.env.example)) and restrict its permissions:
 
@@ -71,6 +74,12 @@ go run ./cmd/kup-helper [flags]
 | `-orgs`  | Restrict the search to one or more GitHub organizations (comma-separated) | `KUP_ORGS`, else none (searches everywhere your token can see) |
 | `-since` | Start date in `YYYY-MM-DD` format                     | 1st of the current month                       |
 | `-day`   | Day of the month the report is submitted (1-31). Searches from that day of the previous month until today; shorter months are clamped to their last day. Cannot be combined with `-since` | (none) |
+| `-no-jira` | Skip fetching ticket titles from Jira, even if `JIRA_EMAIL`/`JIRA_API_TOKEN` are set | off |
+
+When `JIRA_HOSTNAME`, `JIRA_EMAIL` and `JIRA_API_TOKEN` are all set, each line under "Jira ticket IDs" gets the ticket
+title as a third field (`- PROJ-123 | https://<host>/browse/PROJ-123 | Title`). Tickets that don't exist or aren't visible
+to you are shown as `(not found)`. If the lookup fails (e.g. bad credentials), a warning is printed and the report is
+produced without titles.
 
 Example:
 
@@ -87,13 +96,17 @@ Searching for PRs created since: 2026-09-01
 
 Found 3 pull request(s).
 
+=== Jira ticket IDs ===
+- PROJ-123
+- PROJ-456
+
 === Repositories ===
 - my-company/backend-service
 - my-company/frontend-app
 
-=== Jira ticket IDs ===
-- PROJ-123
-- PROJ-456
+=== Valid PR URLs ===
+- https://github.com/my-company/backend-service/pull/42
+- https://github.com/my-company/frontend-app/pull/17
 
 === PRs without Jira ticket ID (validate manually) ===
 - my-company/frontend-app | https://github.com/my-company/frontend-app/pull/19 | update dependencies
@@ -116,5 +129,6 @@ listed separately under "PRs without Jira ticket ID" so they can be validated ma
 cmd/kup-helper/     entry point: flag parsing and orchestration
 internal/config/    settings from environment variables and .env files
 internal/github/    minimal GitHub REST API client (auth, PR search with pagination)
+internal/jira/      minimal Jira Cloud REST API client (issue summary lookup)
 internal/report/    Jira ID extraction, PR aggregation, report printing
 ```
