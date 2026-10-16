@@ -17,6 +17,7 @@
 //
 //	go run ./cmd/kup-helper -org=organization-name
 //	go run ./cmd/kup-helper -since=2026-09-01
+//	go run ./cmd/kup-helper -day=20
 package main
 
 import (
@@ -38,10 +39,22 @@ func main() {
 
 	org := flag.String("org", "", "Optional: restrict the search to a specific organization (e.g. -org=my-company)")
 	since := flag.String("since", "", "Optional: start date in YYYY-MM-DD format (defaults to the 1st of the current month)")
+	day := flag.Int("day", 0, "Optional: day of the month the report is submitted (1-31); searches from that day of the previous month until today. Cannot be combined with -since")
 	flag.Parse()
 
+	if *day != 0 && (*day < 1 || *day > 31) {
+		fmt.Fprintf(os.Stderr, "Error: -day must be between 1 and 31, got %d\n", *day)
+		os.Exit(1)
+	}
+	if *day != 0 && *since != "" {
+		fmt.Fprintln(os.Stderr, "Error: -day and -since cannot be used together.")
+		os.Exit(1)
+	}
+
 	startDate := *since
-	if startDate == "" {
+	if *day != 0 {
+		startDate = startFromDayOfMonth(time.Now(), *day).Format("2006-01-02")
+	} else if startDate == "" {
 		now := time.Now()
 		startDate = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
 	} else if _, err := time.Parse("2006-01-02", startDate); err != nil {

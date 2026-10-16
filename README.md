@@ -51,11 +51,13 @@ go run ./cmd/kup-helper [flags]
 | -------- | ----------------------------------------------------- | ---------------------------------------------- |
 | `-org`   | Restrict the search to a specific GitHub organization | (none, searches everywhere your token can see) |
 | `-since` | Start date in `YYYY-MM-DD` format                     | 1st of the current month                       |
+| `-day`   | Day of the month the report is submitted (1-31). Searches from that day of the previous month until today; shorter months are clamped to their last day. Cannot be combined with `-since` | (none) |
 
 Example:
 
 ```sh
 go run ./cmd/kup-helper -org=my-company -since=2026-01-01
+go run ./cmd/kup-helper -day=20   # run on 2026-10-15 -> searches since 2026-09-20
 ```
 
 ### Example output
